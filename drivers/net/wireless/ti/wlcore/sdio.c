@@ -152,6 +152,10 @@ static int wl12xx_sdio_power_on(struct wl12xx_sdio_glue *glue)
 	int ret;
 	struct sdio_func *func = dev_to_sdio_func(glue->dev);
 	struct mmc_card *card = func->card;
+	struct wl12xx_platform_data *pdata = wl12xx_get_platform_data();
+
+	if (!IS_ERR(pdata))
+		pdata->set_power(1);
 
 	ret = pm_runtime_get_sync(&card->dev);
 	if (ret) {
@@ -180,6 +184,7 @@ static int wl12xx_sdio_power_off(struct wl12xx_sdio_glue *glue)
 	int ret;
 	struct sdio_func *func = dev_to_sdio_func(glue->dev);
 	struct mmc_card *card = func->card;
+	struct wl12xx_platform_data *pdata = wl12xx_get_platform_data();
 
 	sdio_claim_host(func);
 	sdio_disable_func(func);
@@ -192,6 +197,9 @@ static int wl12xx_sdio_power_off(struct wl12xx_sdio_glue *glue)
 
 	/* Let runtime PM know the card is powered off */
 	pm_runtime_put_sync(&card->dev);
+
+	if (!IS_ERR(pdata))
+		pdata->set_power(0);
 
 out:
 	return ret;

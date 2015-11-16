@@ -50,6 +50,36 @@
 
 	ahb {
 		apb {
+			mmc0: mmc@f8000000 {
+				pinctrl-names = "default";
+				pinctrl-0 = <&pinctrl_mmc0_clk_cmd_dat &pinctrl_wlan_irq>;
+				status = "okay";
+
+				non-removable;
+				cap-power-off-card;
+				keep-power-in-suspend;
+
+				slot@1 {
+					compatible = "ti,wilink8";
+					reg = <1>;
+					bus-width = <4>;
+					interrupt-parent = <&pioE>;
+					interrupts = <8 IRQ_TYPE_EDGE_RISING>;
+					wlan-pwr-gpio = <&pioC 27 GPIO_ACTIVE_HIGH>;
+					wlan-en-gpio = <&pioC 28 GPIO_ACTIVE_HIGH>;
+					status = "okay";
+				};
+			};
+
+			pinctrl@fc06a000 {
+				wifi {
+					pinctrl_wlan_irq: wlan_irq {
+						atmel,pins = <
+							AT91_PIOE 8 AT91_PERIPH_GPIO AT91_PINCTRL_PULL_DOWN  /* WLAN_IRQ */
+						>;
+					};
+				};
+			};
 		};
 	};
 };

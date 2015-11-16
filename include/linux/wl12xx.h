@@ -55,12 +55,20 @@ struct wl1251_platform_data {
 	bool use_eeprom;
 };
 
+struct wl12xx_gpio_data {
+	int gpio;
+	bool alow;
+};
+
 struct wl12xx_platform_data {
 	int irq;
 	int board_ref_clock;
 	int board_tcxo_clock;
 	unsigned long platform_quirks;
 	bool pwr_in_suspend;
+	struct wl12xx_gpio_data wlan_pwr;
+	struct wl12xx_gpio_data wlan_en;
+	int (*set_power)(int);
 };
 
 /* Platform does not support level trigger interrupts */
