@@ -133,6 +133,13 @@
 						>;
 					};
 				};
+				usb1 {
+					pinctrl_usb1_ovcur: usb1_ovcur {
+						atmel,pins = <
+							AT91_PIOE 12 AT91_PERIPH_GPIO AT91_PINCTRL_PULL_UP /* USB_OVCUR */
+						>;
+					};
+				};
 			};
 		};
 
@@ -172,6 +179,26 @@
 				label = "rootfs";
 				reg = <0x800000 0x0f800000>;
 			};
+		};
+
+		usb0: gadget@00400000 {
+			status = "okay";
+		};
+
+		usb1: ohci@00500000 {
+			pinctrl-names = "default";
+			pinctrl-0 = <&pinctrl_usb1_ovcur>;
+			num-ports = <3>;
+			atmel,vbus-gpio = <0
+				&pioE 11 GPIO_ACTIVE_HIGH
+				&pioE 14 GPIO_ACTIVE_HIGH
+			>;
+			atmel,oc-gpio = <&pioE 12 GPIO_ACTIVE_LOW>;
+			status = "okay";
+		};
+
+		usb2: ehci@00600000 {
+			status = "okay";
 		};
 	};
 
