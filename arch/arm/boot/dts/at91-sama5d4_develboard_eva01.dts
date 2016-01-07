@@ -71,6 +71,11 @@
 				};
 			};
 
+			/* WL18xx Bluetooth UART */
+			usart1: serial@f8030000 {
+				status = "okay";
+			};
+
 			pinctrl@fc06a000 {
 				wifi {
 					pinctrl_wlan_irq: wlan_irq {
