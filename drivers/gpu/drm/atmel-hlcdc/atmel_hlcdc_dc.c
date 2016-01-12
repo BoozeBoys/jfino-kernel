@@ -544,6 +544,13 @@ static int atmel_hlcdc_dc_load(struct drm_device *dev)
 	/* force connectors detection */
 	drm_helper_hpd_irq_event(dev);
 
+	/* early fb initialization */
+	dc->fbdev = drm_fbdev_cma_init(dev, 24,
+			dev->mode_config.num_crtc,
+			dev->mode_config.num_connector);
+	if (IS_ERR(dc->fbdev))
+		dc->fbdev = NULL;
+
 	return 0;
 
 err_periph_clk_disable:
