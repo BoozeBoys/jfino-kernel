@@ -252,6 +252,7 @@ static int drm_fbdev_cma_create(struct drm_fb_helper *helper,
 	struct drm_device *dev = helper->dev;
 	struct drm_gem_cma_object *obj;
 	struct drm_framebuffer *fb;
+	struct device_node *nd, *pn;
 	unsigned int bytes_per_pixel;
 	unsigned long offset;
 	struct fb_info *fbi;
@@ -308,6 +309,20 @@ static int drm_fbdev_cma_create(struct drm_fb_helper *helper,
 
 	offset = fbi->var.xoffset * bytes_per_pixel;
 	offset += fbi->var.yoffset * fb->pitches[0];
+
+	/* Get splashscreen address from the DT, if available */
+	pn = of_find_node_by_name(NULL, "reserved-memory");
+	if (pn && (nd = of_get_child_by_name(pn, "splashscreen")) != NULL)
+	{
+		const void *reg = of_get_property(nd, "reg", NULL);
+		if (reg) {
+			u32 addr = be32_to_cpup(reg);
+			obj->paddr = addr;
+			obj->vaddr = phys_to_virt(addr);
+		}
+		of_node_put(nd);
+	}
+	of_node_put(pn);
 
 	dev->mode_config.fb_base = (resource_size_t)obj->paddr;
 	fbi->screen_base = obj->vaddr + offset;
@@ -379,6 +394,9 @@ struct drm_fbdev_cma *drm_fbdev_cma_init(struct drm_device *dev,
 		dev_err(dev->dev, "Failed to set initial hw configuration.\n");
 		goto err_drm_fb_helper_fini;
 	}
+
+	/* force early screen detection */
+	drm_fb_helper_hotplug_event(helper);
 
 	return fbdev_cma;
 
