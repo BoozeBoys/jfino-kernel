@@ -475,6 +475,40 @@ void pwm_disable(struct pwm_device *pwm)
 }
 EXPORT_SYMBOL_GPL(pwm_disable);
 
+/**
+ * pwm_set_capture() - capture and report a PWM signal
+ * @pwm: PWM device
+ * @callback: function to call when the capture event is received
+ */
+void pwm_set_capture(struct pwm_device *pwm,
+		     pwm_capture_cb_t callback,
+		     void *args)
+{
+	mutex_lock(&pwm_lock);
+
+	if (pwm && pwm->chip->ops && pwm->chip->ops->set_capture)
+		pwm->chip->ops->set_capture(pwm->chip, pwm, callback, args);
+
+	mutex_unlock(&pwm_lock);
+}
+EXPORT_SYMBOL_GPL(pwm_set_capture);
+
+/**
+ * pwm_sync() - sync PWM channels
+ * @pwm: PWM device
+ */
+int pwm_sync(struct pwm_device *pwm)
+{
+	if (!pwm || !pwm->chip->ops)
+		return -EINVAL;
+
+	if (!pwm->chip->ops->sync)
+		return -ENOSYS;
+
+	return pwm->chip->ops->sync(pwm->chip, pwm);
+}
+EXPORT_SYMBOL_GPL(pwm_sync);
+
 static struct pwm_chip *of_node_to_pwmchip(struct device_node *np)
 {
 	struct pwm_chip *chip;

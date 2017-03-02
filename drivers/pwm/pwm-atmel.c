@@ -16,6 +16,7 @@
 #include <linux/platform_device.h>
 #include <linux/pwm.h>
 #include <linux/slab.h>
+#include <linux/interrupt.h>
 
 /* The following is global registers for PWM controller */
 #define PWM_ENA			0x04
@@ -23,6 +24,8 @@
 #define PWM_SR			0x0C
 /* Bit field in SR */
 #define PWM_SR_ALL_CH_ON	0x0F
+#define PWM_IER1		0x10
+#define PWM_ISR1		0x1C
 
 /* The following register is PWM channel related registers */
 #define PWM_CH_REG_OFFSET	0x200
@@ -59,6 +62,8 @@ struct atmel_pwm_chip {
 	struct pwm_chip chip;
 	struct clk *clk;
 	void __iomem *base;
+	pwm_capture_cb_t callback;
+	void *cb_args;
 
 	void (*config)(struct pwm_chip *chip, struct pwm_device *pwm,
 		       unsigned long dty, unsigned long prd);
@@ -248,13 +253,57 @@ static void atmel_pwm_disable(struct pwm_chip *chip, struct pwm_device *pwm)
 	clk_disable(atmel_pwm->clk);
 }
 
+static void atmel_pwm_set_capture(struct pwm_chip *chip, struct pwm_device *pwm,
+				  pwm_capture_cb_t callback, void *args)
+{
+	struct atmel_pwm_chip *atmel_pwm = to_atmel_pwm_chip(chip);
+	u32 val;
+
+	atmel_pwm->callback = callback;
+	atmel_pwm->cb_args = args;
+
+	val = atmel_pwm_readl(atmel_pwm, PWM_IER1);
+	val |= (1 << pwm->hwpwm);
+	atmel_pwm_writel(atmel_pwm, PWM_IER1, val);
+}
+
+static int atmel_pwm_sync(struct pwm_chip *chip, struct pwm_device *pwm)
+{
+	struct atmel_pwm_chip *atmel_pwm = to_atmel_pwm_chip(chip);
+	int ret;
+
+	ret = clk_enable(atmel_pwm->clk);
+	if (ret) {
+		dev_err(chip->dev, "failed to enable PWM clock\n");
+		return ret;
+	}
+
+	atmel_pwm_writel(atmel_pwm, PWM_ENA, 0xf);
+
+	return 0;
+}
+
 static const struct pwm_ops atmel_pwm_ops = {
 	.config = atmel_pwm_config,
 	.set_polarity = atmel_pwm_set_polarity,
+	.set_capture = atmel_pwm_set_capture,
 	.enable = atmel_pwm_enable,
 	.disable = atmel_pwm_disable,
+	.sync = atmel_pwm_sync,
 	.owner = THIS_MODULE,
 };
+
+static irqreturn_t atmel_pwm_interrupt(int irq, void *data)
+{
+	struct atmel_pwm_chip *atmel_pwm = data;
+
+	atmel_pwm_readl(atmel_pwm, PWM_ISR1);
+
+	if (atmel_pwm->callback)
+		atmel_pwm->callback(atmel_pwm->cb_args);
+
+	return IRQ_HANDLED;
+}
 
 struct atmel_pwm_data {
 	void (*config)(struct pwm_chip *chip, struct pwm_device *pwm,
@@ -320,7 +369,7 @@ static int atmel_pwm_probe(struct platform_device *pdev)
 	const struct atmel_pwm_data *data;
 	struct atmel_pwm_chip *atmel_pwm;
 	struct resource *res;
-	int ret;
+	int irq, ret;
 
 	data = atmel_pwm_get_driver_data(pdev);
 	if (!data)
@@ -338,6 +387,19 @@ static int atmel_pwm_probe(struct platform_device *pdev)
 	atmel_pwm->clk = devm_clk_get(&pdev->dev, NULL);
 	if (IS_ERR(atmel_pwm->clk))
 		return PTR_ERR(atmel_pwm->clk);
+
+	irq = platform_get_irq(pdev, 0);
+	if (irq < 0) {
+		dev_err(&pdev->dev, "failed to obtain IRQ\n");
+		return irq;
+	}
+
+	ret = devm_request_irq(&pdev->dev, irq, atmel_pwm_interrupt, 0,
+			       pdev->name, atmel_pwm);
+	if (ret < 0) {
+		dev_err(&pdev->dev, "failed to request IRQ\n");
+		return ret;
+	}
 
 	ret = clk_prepare(atmel_pwm->clk);
 	if (ret) {

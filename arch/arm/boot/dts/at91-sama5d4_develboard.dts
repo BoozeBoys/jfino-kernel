@@ -243,7 +243,7 @@
 
 	leds {
 		compatible = "gpio-leds";
-		status = "okay";
+		status = "disabled";
 
 		d10 {
 			label = "d10";

@@ -107,6 +107,31 @@ extern const u8 atmel_tc_divisors[5];
 #define        ATMEL_TC_TC2XC2S_NONE	(1 << 4)
 #define        ATMEL_TC_TC2XC2S_TIOA0	(2 << 4)
 #define        ATMEL_TC_TC2XC2S_TIOA1	(3 << 4)
+#define     ATMEL_TC_QDEN	(1 << 8)
+#define     ATMEL_TC_POSEN	(1 << 9)
+#define     ATMEL_TC_SPEEDEN	(1 << 10)
+#define     ATMEL_TC_QDTRANS	(1 << 11)
+#define     ATMEL_TC_EDGPHA	(1 << 12)
+#define     ATMEL_TC_INVA	(1 << 13)
+#define     ATMEL_TC_INVB	(1 << 14)
+#define     ATMEL_TC_INVIDX	(1 << 15)
+#define     ATMEL_TC_SWAP	(1 << 16)
+#define     ATMEL_TC_IDXPHB	(1 << 17)
+#define     ATMEL_TC_MAXFILT	(63 << 20)
+
+/*
+ * Quadrature encoder registers
+ */
+
+#define ATMEL_TC_QIER	0xc8
+#define ATMEL_TC_QIDR	0xcc
+#define ATMEL_TC_QIMR	0xd0
+#define ATMEL_TC_QISR	0xd4
+#define     ATMEL_TC_IDX	(1 << 0)
+#define     ATMEL_TC_DIRCHG	(1 << 1)
+#define     ATMEL_TC_QERR	(1 << 2)
+#define     ATMEL_TC_DIR	(1 << 8)
+#define     ATMEL_ALL_QIRQS	(ATMEL_TC_IDX | ATMEL_TC_DIRCHG | ATMEL_TC_QERR)
 
 
 /*
@@ -265,5 +290,8 @@ extern const u8 atmel_tc_divisors[5];
 				 ATMEL_TC_CPCS | ATMEL_TC_LDRAS | \
 				 ATMEL_TC_LDRBS | ATMEL_TC_ETRGS) \
 				 /* all IRQs */
+
+#define ATMEL_TC_EMR	(0x30)			/* extended mode register */
+#define    ATMEL_TC_NODIVCLK	(1 << 8)	/* no divided clock */
 
 #endif

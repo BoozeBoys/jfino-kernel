@@ -73,11 +73,10 @@ config ATMEL_TCB_CLKSRC
 	  (delays of up to two seconds) based on the 32 KiHz clock.
 
 config ATMEL_TCB_CLKSRC_BLOCK
-	int
+	int "TC Block"
 	depends on ATMEL_TCB_CLKSRC
-	prompt "TC Block" if CPU_AT32AP700X
 	default 0
-	range 0 1
+	range 0 2
 	help
 	  Some chips provide more than one TC block, so you have the
 	  choice of which one to use for the clock framework.  The other

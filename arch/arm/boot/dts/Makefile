@@ -80,6 +80,7 @@ dtb-$(CONFIG_ARCH_AT91)	+= at91-sama5d4_develboard.dtb
 dtb-$(CONFIG_ARCH_AT91)	+= at91-sama5d4_develboard_eva01.dtb
 dtb-$(CONFIG_ARCH_AT91)	+= at91-sama5d4_develboard_eva01_r2.dtb
 dtb-$(CONFIG_ARCH_AT91)	+= at91-sama5d4_develboard_eva01_r3.dtb
+dtb-$(CONFIG_ARCH_AT91)	+= at91-sama5d4_develboard_develed.dtb
 
 dtb-$(CONFIG_ARCH_ATLAS6) += atlas6-evb.dtb
 dtb-$(CONFIG_ARCH_AXXIA) += axm5516-amarillo.dtb

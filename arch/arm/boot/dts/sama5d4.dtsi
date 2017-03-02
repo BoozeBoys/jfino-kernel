@@ -70,6 +70,7 @@
 		gpio4 = &pioE;
 		tcb0 = &tcb0;
 		tcb1 = &tcb1;
+		tcb2 = &tcb2;
 		i2c0 = &i2c0;
 		i2c1 = &i2c1;
 		i2c2 = &i2c2;
@@ -1243,6 +1244,14 @@
 				reg = <0xfc020000 0x100>;
 				interrupts = <41 IRQ_TYPE_LEVEL_HIGH 0>;
 				clocks = <&tcb1_clk>;
+				clock-names = "t0_clk";
+			};
+
+			tcb2: timer@fc024000 {
+				compatible = "atmel,at91sam9x5-tcb";
+				reg = <0xfc024000 0x100>;
+				interrupts = <42 IRQ_TYPE_LEVEL_HIGH 0>;
+				clocks = <&tcb2_clk>;
 				clock-names = "t0_clk";
 			};
 

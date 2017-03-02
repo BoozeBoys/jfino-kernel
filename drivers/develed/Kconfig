@@ -1,0 +1,21 @@
+#
+# Develed drivers
+#
+
+menuconfig DEVELED
+	bool "Develed drivers"
+	depends on GPIOLIB
+	help
+	  This enables Develed custom drivers.
+	  You only need to enable this, if you also want to enable
+	  one or more of the drivers below.
+
+if DEVELED
+
+config DEVELED_PWM_SSC
+	bool "Develed PWM signal generation for SSC"
+        depends on PWM
+	help
+	  Say Y here to enable the Develed SSC signal generation via PWM.
+
+endif

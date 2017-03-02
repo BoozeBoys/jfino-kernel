@@ -7,6 +7,8 @@
 struct pwm_device;
 struct seq_file;
 
+typedef void (*pwm_capture_cb_t)(void *args);
+
 #if IS_ENABLED(CONFIG_PWM)
 /*
  * pwm_request - request a PWM device
@@ -32,6 +34,16 @@ int pwm_enable(struct pwm_device *pwm);
  * pwm_disable - stop a PWM output toggling
  */
 void pwm_disable(struct pwm_device *pwm);
+
+/*
+ * pwm_capture - capture and report a PWM signal
+ */
+void pwm_set_capture(struct pwm_device *pwm, pwm_capture_cb_t callback, void *args);
+
+/*
+ * pwm_sync - sync PWM channels
+ */
+int pwm_sync(struct pwm_device *pwm);
 #else
 static inline struct pwm_device *pwm_request(int pwm_id, const char *label)
 {
@@ -54,6 +66,16 @@ static inline int pwm_enable(struct pwm_device *pwm)
 
 static inline void pwm_disable(struct pwm_device *pwm)
 {
+}
+
+static inline void pwm_set_capture(struct pwm_device *pwm,
+				   pwm_capture_cb_t callback, void *args)
+{
+}
+
+static inline int pwm_sync(struct pwm_device *pwm)
+{
+	return -EINVAL;
 }
 #endif
 
@@ -125,6 +147,7 @@ int pwm_set_polarity(struct pwm_device *pwm, enum pwm_polarity polarity);
  * @free: optional hook for freeing a PWM
  * @config: configure duty cycles and period length for this PWM
  * @set_polarity: configure the polarity of this PWM
+ * @capture: capture and report PWM signal
  * @enable: enable PWM output toggling
  * @disable: disable PWM output toggling
  * @dbg_show: optional routine to show contents in debugfs
@@ -141,10 +164,16 @@ struct pwm_ops {
 	int			(*set_polarity)(struct pwm_chip *chip,
 					  struct pwm_device *pwm,
 					  enum pwm_polarity polarity);
+	void			(*set_capture)(struct pwm_chip *chip,
+					   struct pwm_device *pwm,
+					   pwm_capture_cb_t callback,
+					   void *args);
 	int			(*enable)(struct pwm_chip *chip,
 					  struct pwm_device *pwm);
 	void			(*disable)(struct pwm_chip *chip,
 					   struct pwm_device *pwm);
+	int			(*sync)(struct pwm_chip *chip,
+					struct pwm_device *pwm);
 #ifdef CONFIG_DEBUG_FS
 	void			(*dbg_show)(struct pwm_chip *chip,
 					    struct seq_file *s);
