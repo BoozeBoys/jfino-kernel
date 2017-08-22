@@ -77,6 +77,7 @@
 						atmel,pins = <
 							AT91_PIOA 26 AT91_PERIPH_B AT91_PINCTRL_PULL_DOWN /* PWMH0 */
 							AT91_PIOA 28 AT91_PERIPH_B AT91_PINCTRL_PULL_DOWN /* PWMH1 */
+							AT91_PIOC 2  AT91_PERIPH_B AT91_PINCTRL_PULL_DOWN /* PWMH3 */
 						>;
 					};
 				};
@@ -97,22 +98,16 @@
 
 		develed,clk-pwm		= <0 300 150 0>;
 		develed,sync-pwm	= <1 9600 9400 1>;
+		develed,stamp-pwm	= <3 39321600 300 0>; // every 16KB
 	};
 
-	dout: ssc-generic@0 {
-		compatible = "develed,ssc-generic";
+	sipo: sscdev@0 {
+		compatible = "develer,sscdev";
 		status = "okay";
-	};
 
-	sound@0 {
-		compatible = "atmel,asoc-generic";
-
-		atmel,model = "Develed I/O controller";
-		atmel,audio-routing =
-			"Data out", "DOUT";
-
-		atmel,ssc-controller = <&ssc0>;
-		atmel,audio-codec = <&dout>;
+		develer,ssc = <&ssc0>;
+		develer,bufsize = <32768>;
+		develer,external-clk;
 	};
 };
 

@@ -23,12 +23,14 @@
 enum pwm_ssc_signals {
 	PWM_SSC_CLOCK	= 0,
 	PWM_SSC_SYNC,
+	PWM_SSC_STAMP,
 	PWM_SSC_SIGNALS_NUM /* guard */
 };
 
 static const char *pwm_ssc_signal_names[PWM_SSC_SIGNALS_NUM] = {
 	"develed,clk-pwm",
 	"develed,sync-pwm",
+	"develed,stamp-pwm",
 };
 
 struct pwm_ssc_params {
@@ -39,31 +41,60 @@ struct pwm_ssc_params {
 	unsigned int		polarity;
 };
 
+struct pwm_ssc_stamp {
+	s64	timestamp;
+	u64	id;
+} __attribute__((packed));
+
 struct pwm_ssc_data {
 	struct pwm_ssc_params	params[PWM_SSC_SIGNALS_NUM];
+	struct pwm_ssc_stamp	last_stamp;
+	spinlock_t		lock;
 };
 
 static int pwm_ssc_enable(struct device *dev, struct pwm_ssc_data *priv);
+
+static ssize_t pwm_ssc_timestamp_show(struct device *dev,
+				      struct device_attribute *attr,
+				      char *buf)
+{
+	struct pwm_ssc_data *priv = dev_get_drvdata(dev);
+
+	spin_lock_irq(&priv->lock);
+	memcpy(buf, &priv->last_stamp, sizeof(struct pwm_ssc_stamp));
+	spin_unlock_irq(&priv->lock);
+
+	return sizeof(struct pwm_ssc_stamp);
+}
+
+static ssize_t pwm_ssc_frequency_show(struct device *dev,
+				      struct device_attribute *attr,
+				      char *buf)
+{
+	struct pwm_ssc_data *priv = dev_get_drvdata(dev);
+
+	return sprintf(buf, "%d", NSEC_IN_SEC / priv->params[PWM_SSC_CLOCK].period);
+}
 
 static ssize_t pwm_ssc_enable_store(struct device *dev,
 				    struct device_attribute *attr,
 				    const char *buf, size_t size)
 {
 	struct pwm_ssc_data *priv = dev_get_drvdata(dev);
-	unsigned int ok;
 
-	if (kstrtouint(buf, 10, &ok) < 0)
-		return -EINVAL;
-
-	if (ok && pwm_ssc_enable(dev, priv))
+	if (pwm_ssc_enable(dev, priv))
 		return -EIO;
 
 	return size;
 }
 
-static DEVICE_ATTR(enable, S_IWUSR, NULL, pwm_ssc_enable_store);
+static DEVICE_ATTR(timestamp, S_IRUGO, pwm_ssc_timestamp_show, NULL);
+static DEVICE_ATTR(frequency, S_IRUGO, pwm_ssc_frequency_show, NULL);
+static DEVICE_ATTR(enable,    S_IWUSR, NULL, pwm_ssc_enable_store);
 
 static struct attribute *pwm_ssc_attributes[] = {
+	&dev_attr_timestamp.attr,
+	&dev_attr_frequency.attr,
 	&dev_attr_enable.attr,
 	NULL
 };
@@ -71,6 +102,16 @@ static struct attribute *pwm_ssc_attributes[] = {
 static const struct attribute_group pwm_ssc_attr_group = {
 	.attrs	= pwm_ssc_attributes,
 };
+
+static void pwm_ssc_capture_cb(void *args)
+{
+	struct pwm_ssc_data *priv = args;
+	struct timeval now;
+
+	do_gettimeofday(&now);
+	priv->last_stamp.timestamp = timeval_to_ns(&now);
+	priv->last_stamp.id++;
+}
 
 static int pwm_ssc_add(struct device *dev, const char *pwm_label,
 		       struct pwm_ssc_params *params)
@@ -128,6 +169,8 @@ static int pwm_ssc_create(struct device *dev, struct pwm_ssc_data *priv)
 			goto release_all;
 	}
 
+	pwm_set_capture(priv->params[PWM_SSC_STAMP].pwm, pwm_ssc_capture_cb, priv);
+
 	return 0;
 
 release_all:
@@ -171,13 +214,26 @@ static int pwm_ssc_probe(struct platform_device *pdev)
 		return ret;
 	}
 
+	spin_lock_init(&priv->lock);
+
+	priv->last_stamp.timestamp = -1;
+	priv->last_stamp.id = 0;
+
 	ret = pwm_ssc_create(&pdev->dev, priv);
 	if (ret)
 		return ret;
 
+	ret = pwm_ssc_enable(&pdev->dev, priv);
+	if (ret)
+		goto err_cleanup;
+
 	platform_set_drvdata(pdev, priv);
 
 	return 0;
+
+err_cleanup:
+	pwm_ssc_cleanup(priv);
+	return ret;
 }
 
 static int pwm_ssc_remove(struct platform_device *pdev)

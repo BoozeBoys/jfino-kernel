@@ -514,6 +514,12 @@ config VEXPRESS_SYSCFG
 	  bus. System Configuration interface is one of the possible means
 	  of generating transactions on this bus.
 
+config DEVELER_SSCDEV
+	bool "Develer SSC user space interface"
+	depends on ATMEL_SSC
+	help
+	  This option enables the SSC user space interface.
+
 source "drivers/misc/c2port/Kconfig"
 source "drivers/misc/eeprom/Kconfig"
 source "drivers/misc/cb710/Kconfig"

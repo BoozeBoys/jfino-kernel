@@ -4,13 +4,35 @@
 #include <linux/platform_device.h>
 #include <linux/list.h>
 #include <linux/io.h>
+#include <linux/circ_buf.h>
+
+#include <linux/dma-mapping.h>
+#include <linux/dmaengine.h>
+#include <linux/platform_data/atmel.h>
+#include <linux/platform_data/dma-atmel.h>
 
 struct atmel_ssc_platform_data {
 	int			use_dma;
 	int			has_fslen_ext;
 };
 
+struct atmel_ssc_dma {
+	struct dma_chan			*chan_rx;
+	struct dma_chan			*chan_tx;
+	struct scatterlist		sgrx;
+	struct scatterlist		sgtx;
+	struct dma_async_tx_descriptor	*desc_rx;
+	struct dma_async_tx_descriptor	*desc_tx;
+	dma_cookie_t			cookie_rx;
+	dma_cookie_t			cookie_tx;
+
+	struct at_dma_slave		dma_slave;
+};
+
 struct ssc_device {
+	spinlock_t		lock;
+	unsigned long		flags;
+
 	struct list_head	list;
 	dma_addr_t		phybase;
 	void __iomem		*regs;
@@ -20,10 +42,31 @@ struct ssc_device {
 	int			user;
 	int			irq;
 	bool			clk_from_rk_pin;
+
+	int			word_size;
+
+	struct circ_buf		rx_ring;
+	struct circ_buf		tx_ring;
+
+	struct atmel_ssc_dma	dma;
 };
 
 struct ssc_device * __must_check ssc_request(unsigned int ssc_num);
 void ssc_free(struct ssc_device *ssc);
+int ssc_setup(struct ssc_device *ssc);
+
+static inline struct ssc_device *ssc_dev_get(struct ssc_device *ssc)
+{
+	return (ssc && get_device(&ssc->pdev->dev)) ? ssc : NULL;
+}
+
+static inline void ssc_dev_put(struct ssc_device *ssc)
+{
+	if (ssc)
+		put_device(&ssc->pdev->dev);
+}
+
+int ssc_start(struct ssc_device *ssc);
 
 /* SSC register offsets */
 
@@ -312,6 +355,61 @@ void ssc_free(struct ssc_device *ssc);
 #define SSC_PDC_PTSR_RXTEN_OFFSET		 0
 #define SSC_PDC_PTSR_TXTEN_SIZE			 1
 #define SSC_PDC_PTSR_TXTEN_OFFSET		 8
+
+/* SSC system clock ids */
+#define ATMEL_SYSCLK_MCK	0 /* SSC uses AT91 MCK as system clock */
+
+/* SSC divider ids */
+#define ATMEL_SSC_CMR_DIV	0 /* MCK divider for BCLK */
+#define ATMEL_SSC_TCMR_PERIOD	1 /* BCLK divider for transmit FS */
+#define ATMEL_SSC_RCMR_PERIOD	2 /* BCLK divider for receive FS */
+/*
+ * SSC direction masks
+ */
+#define SSC_DIR_MASK_UNUSED	0
+#define SSC_DIR_MASK_PLAYBACK	1
+#define SSC_DIR_MASK_CAPTURE	2
+
+/*
+ * SSC register values that Atmel left out of <linux/atmel-ssc.h>.  These
+ * are expected to be used with SSC_BF
+ */
+/* START bit field values */
+#define SSC_START_CONTINUOUS	0
+#define SSC_START_TX_RX		1
+#define SSC_START_LOW_RF	2
+#define SSC_START_HIGH_RF	3
+#define SSC_START_FALLING_RF	4
+#define SSC_START_RISING_RF	5
+#define SSC_START_LEVEL_RF	6
+#define SSC_START_EDGE_RF	7
+#define SSS_START_COMPARE_0	8
+
+/* CKI bit field values */
+#define SSC_CKI_FALLING		0
+#define SSC_CKI_RISING		1
+
+/* CKO bit field values */
+#define SSC_CKO_NONE		0
+#define SSC_CKO_CONTINUOUS	1
+#define SSC_CKO_TRANSFER	2
+
+/* CKS bit field values */
+#define SSC_CKS_DIV		0
+#define SSC_CKS_CLOCK		1
+#define SSC_CKS_PIN		2
+
+/* FSEDGE bit field values */
+#define SSC_FSEDGE_POSITIVE	0
+#define SSC_FSEDGE_NEGATIVE	1
+
+/* FSOS bit field values */
+#define SSC_FSOS_NONE		0
+#define SSC_FSOS_NEGATIVE	1
+#define SSC_FSOS_POSITIVE	2
+#define SSC_FSOS_LOW		3
+#define SSC_FSOS_HIGH		4
+#define SSC_FSOS_TOGGLE		5
 
 /* Bit manipulation macros */
 #define SSC_BIT(name)					\
