@@ -179,6 +179,13 @@
 						>;
 					};
 				};
+				w1 {
+					pinctrl_w1_ctrl: w1_ctrl {
+						atmel,pins = <
+							  AT91_PIOE 28 AT91_PERIPH_GPIO AT91_PINCTRL_PULL_UP
+						>;
+					};
+				};
 			};
 		};
 
@@ -250,5 +257,12 @@
 			gpios = <&pioB 31 GPIO_ACTIVE_HIGH>;
 			linux,default-trigger = "heartbeat";
 		};
+	};
+	onewire@0 {
+		pinctrl-names = "default";
+		pinctrl-0 = <&pinctrl_w1_ctrl>;
+		compatible = "w1-gpio";
+		gpios = <&pioE 28 GPIO_ACTIVE_LOW>;
+		status = "okay";
 	};
 };
