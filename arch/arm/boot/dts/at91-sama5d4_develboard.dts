@@ -189,7 +189,7 @@
 				w1 {
 					pinctrl_w1_ctrl: w1_ctrl {
 						atmel,pins = <
-							  AT91_PIOE 28 AT91_PERIPH_GPIO AT91_PINCTRL_PULL_UP
+							  AT91_PIOC 23 AT91_PERIPH_GPIO AT91_PINCTRL_PULL_UP
 						>;
 					};
 				};
@@ -269,7 +269,7 @@
 		pinctrl-names = "default";
 		pinctrl-0 = <&pinctrl_w1_ctrl>;
 		compatible = "w1-gpio";
-		gpios = <&pioE 28 GPIO_ACTIVE_LOW>;
+		gpios = <&pioC 23 GPIO_ACTIVE_LOW>;
 		status = "okay";
 	};
 };

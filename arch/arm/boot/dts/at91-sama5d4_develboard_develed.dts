@@ -65,7 +65,7 @@
 					bus-width = <4>;
 					interrupt-parent = <&pioE>;
 					interrupts = <8 IRQ_TYPE_EDGE_RISING>;
-					wlan-pwr-gpio = <&pioB 29 GPIO_ACTIVE_HIGH>;
+					wlan-pwr-gpio = <&pioE 5 GPIO_ACTIVE_HIGH>;
 					wlan-en-gpio = <&pioD 26 GPIO_ACTIVE_HIGH>;
 					status = "okay";
 				};
