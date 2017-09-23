@@ -50,6 +50,19 @@
 #define DS2438_CURRENT_MSB		0x06
 #define DS2438_THRESHOLD		0x07
 
+/**
+ * module_w1_driver() - Helper macro for registering a 1-Wire families
+ * @__w1_family: w1_family struct
+ *
+ * Helper macro for 1-Wire families which do not do anything special in module
+ * init/exit. This eliminates a lot of boilerplate. Each module may only
+ * use this macro once, and calling it replaces module_init() and module_exit()
+ */
+#define module_w1_family(__w1_family) \
+        module_driver(__w1_family, w1_register_family, \
+                        w1_unregister_family)
+
+
 int w1_ds2438_get_page(struct w1_slave *sl, int pageno, u8 *buf)
 {
 	unsigned int retries = W1_DS2438_RETRIES;
