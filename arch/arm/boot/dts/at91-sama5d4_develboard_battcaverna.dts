@@ -1,8 +1,9 @@
 /*
- * at91-sama5d4_develboard_develed.dts
+ * at91-sama5d4_develboard_battcaverna.dts
  *
  *  Copyright (C) 2017 Develer,
  *                2017 Pietro Lorefice <pietro@develer.com>
+ *                2017 Francesco Sacchi <batt@develer.com>
  *
  * This file is dual-licensed: you can use it either under the terms
  * of the GPL or the X11 license, at your option. Note that this dual
@@ -45,8 +46,8 @@
 #include "at91-sama5d4_develboard.dts"
 
 / {
-	model = "Atmel SAMA5D4 DevelBoard Develed";
-	compatible = "atmel,sama5d4-develboard-develed", "atmel,sama5d4-develboard", "atmel,sama5d4", "atmel,sama5";
+	model = "Atmel SAMA5D4 DevelBoard Battcaverna";
+	compatible = "atmel,sama5d4-develboard-battcaverna", "atmel,sama5d4-develboard", "atmel,sama5d4", "atmel,sama5";
 
 	ahb {
 		apb {
