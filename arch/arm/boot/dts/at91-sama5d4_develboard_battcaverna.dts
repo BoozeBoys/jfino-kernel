@@ -51,6 +51,18 @@
 
 	ahb {
 		apb {
+			i2c1: i2c@f8018000 {
+				status = "okay";
+
+				pressure@77 {
+					compatible = "bosch,bmp085";
+					reg = <0x77>;
+					chip-id = <0x55>;
+					temp-measurement-period = <100>;
+					default-oversampling = <2>;
+				};
+			};
+
 			mmc0: mmc@f8000000 {
 				pinctrl-names = "default";
 				pinctrl-0 = <&pinctrl_mmc0_clk_cmd_dat &pinctrl_wlan_irq>;
