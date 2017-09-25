@@ -102,34 +102,14 @@
 					};
 				};
 			};
+
+			usart0: serial@f802c000 {
+				status = "okay";
+				linux,rs485-enabled-at-boot-time;
+				rs485-rts-delay = <0 0>;
+			};
 		};
 	};
 
-	pwm-ssc {
-		compatible		= "develed,pwm-ssc";
-		status			= "okay";
-
-		develed,clk-pwm		= <0 300 150 0>;
-		develed,sync-pwm	= <1 9600 9400 1>;
-		develed,stamp-pwm	= <3 39321600 300 0>; // every 16KB
-	};
-
-	sipo: sscdev@0 {
-		compatible = "develer,sscdev";
-		status = "okay";
-
-		develer,ssc = <&ssc0>;
-		develer,bufsize = <32768>;
-		develer,external-clk;
-	};
 };
 
-&pwm0 {
-	pinctrl-names = "default";
-	pinctrl-0 = <&pinctrl_pwm0>;
-	status = "okay";
-};
-
-&ssc0 {
-	status = "okay";
-};
