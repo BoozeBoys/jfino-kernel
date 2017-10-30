@@ -1,5 +1,5 @@
 /*
- * at91-sama5d4_develboard_battcaverna.dts
+ * at91-sama5d4_develboard_jfino.dts
  *
  *  Copyright (C) 2017 Develer,
  *                2017 Pietro Lorefice <pietro@develer.com>
@@ -46,8 +46,8 @@
 #include "at91-sama5d4_develboard.dts"
 
 / {
-	model = "Atmel SAMA5D4 DevelBoard Battcaverna";
-	compatible = "atmel,sama5d4-develboard-battcaverna", "atmel,sama5d4-develboard", "atmel,sama5d4", "atmel,sama5";
+	model = "Atmel SAMA5D4 DevelBoard Jofonchino";
+	compatible = "atmel,sama5d4-develboard-jfino", "atmel,sama5d4-develboard", "atmel,sama5d4", "atmel,sama5";
 
 	ahb {
 		apb {
